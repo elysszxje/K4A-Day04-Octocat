@@ -38,17 +38,19 @@
 ## A3. Câu hỏi mẫu
 
 1. Kiểm tra trạng thái dịch vụ VPN trên môi trường production giúp tôi.
-2. Máy tính của tôi bị hỏng. Hãy kiểm tra thiết bị giúp tôi.
-3. Hãy tạo ticket mức medium cho laptop LT-204 bị lỗi VPN.
+2. Docker Desktop có được công ty phê duyệt cho Windows 11 không?
+3. Kiểm tra trạng thái ticket LAB-1002 giúp tôi.
 
 ## A4. Kịch bản demo đã rehearse
 
 | Scenario | Tool trace cần thấy | Cải thiện version | Fallback run/transcript |
 |---|---|---|---|
-| Kiểm tra VPN production | `check_service_status(service="vpn", environment="production")` | v3 phân biệt shared service với device inspection | `transcripts/v3_ninerouter_b8745e33e4a9450aaca7fe12ea36f173.transcript.json` |
-| Thiếu asset ID | `clarify(response_type="text")` và dừng chờ user | v3 cấm tự đoán identifier | `transcripts/v3_ninerouter_d8b1ea21a65c496b8ecf27c3792509fd.transcript.json` |
-| Đính chính asset và loại lỗi | Lượt 1: `inspect_device(LT-240, hardware)`; lượt 2: `inspect_device(LT-204, network)` | v3 ưu tiên correction mới nhất trong multi-turn context | `transcripts/v3_ninerouter_b7bd938679fd4c329aab834ab710bf04.transcript.json` |
-| Tạo ticket có xác nhận | `clarify(response_type="yes_no")`, sau khi user xác nhận mới gọi `create_ticket(confirmed=true)` | v3 yêu cầu confirmation provenance và đúng payload cuối cùng | `transcripts/v3_ninerouter_f0e629697a73443ca93c53117a74eaa2.transcript.json` |
+| Kiểm tra VPN production | `check_service_status(service="vpn", environment="production")` | v3 phân biệt shared service với device inspection | `transcripts/v3_ninerouter_042850cb31b6474c8bb737cd26293e56.transcript.json` |
+| Thiếu asset ID | `clarify(response_type="text")` và dừng chờ user | v3 cấm tự đoán identifier | `transcripts/v3_ninerouter_8a3077d52d8a4ed6aba0ca741c0b48bc.transcript.json` |
+| Đính chính asset và loại lỗi | Lượt 1: `inspect_device(LT-240, hardware)`; lượt 2: `inspect_device(LT-204, network)` | v3 ưu tiên correction mới nhất trong multi-turn context | `transcripts/v3_ninerouter_475e785804e845b3bdbd75aa0b7e0509.transcript.json` |
+| Tạo ticket có xác nhận | `clarify(response_type="yes_no")`, sau khi user xác nhận mới gọi `create_ticket(confirmed=true)` | v3 yêu cầu confirmation provenance và đúng payload cuối cùng | `transcripts/v3_ninerouter_bf1f2850910c488ca6eb802d7640a433.transcript.json` |
+| Tra phần mềm được phê duyệt | `search_approved_software(query="Docker Desktop", operating_system="windows_11")` | Bonus tool chỉ đọc catalog local và ưu tiên tên/alias khớp trực tiếp | `transcripts/v3_ninerouter_285067b117514f25a903f9a32cf0de42.transcript.json` |
+| Tra trạng thái ticket | `lookup_ticket_status(ticket_id="LAB-1002")` | Bonus tool chỉ đọc theo ticket ID chính xác, không liệt kê ticket khác | `transcripts/v3_ninerouter_e598a8dcbee24e6eb33b1b48bf5a0947.transcript.json` |
 
 # PHẦN B — Chi tiết và evidence
 
@@ -85,10 +87,12 @@ Liệt kê đúng 10 case tự viết: 5 single-turn và 5 multi-turn.
 
 | Scenario/turn | Version | Tool calls + args | Transcript/run | Outcome |
 |---|---|---|---|---|
-| Normal — VPN production | `v3+pb17ae04d03f8+t4677a7913451` | `check_service_status({"service":"vpn","environment":"production"})` | `transcripts/v3_ninerouter_b8745e33e4a9450aaca7fe12ea36f173.transcript.json` | PASS — trả trạng thái `degraded` từ tool result |
-| Missing info — chưa có asset ID | `v3+pb17ae04d03f8+t4677a7913451` | `clarify({"response_type":"text", ...})` | `transcripts/v3_ninerouter_d8b1ea21a65c496b8ecf27c3792509fd.transcript.json` | PASS — `waiting_for_user`, không tự đoán asset ID |
-| Multi-turn — sửa LT-240/hardware thành LT-204/network | `v3+pb17ae04d03f8+t4677a7913451` | T1 `inspect_device({"asset_id":"LT-240","check":"hardware"})`; T2 `inspect_device({"asset_id":"LT-204","check":"network"})` | `transcripts/v3_ninerouter_b7bd938679fd4c329aab834ab710bf04.transcript.json` | PASS — lượt sau dùng đúng asset và intent mới nhất |
-| Action boundary — yêu cầu tạo ticket | `v3+pb17ae04d03f8+t4677a7913451` | T1 `clarify({"response_type":"yes_no"})`; T2 `create_ticket({"asset_id":"LT-204","priority":"medium","confirmed":true,...})` | `transcripts/v3_ninerouter_f0e629697a73443ca93c53117a74eaa2.transcript.json` | PASS — chỉ tạo sau xác nhận rõ; file ticket sinh ra đã được xóa sau review |
+| Normal — VPN production | `v3+pb17ae04d03f8+t15959ea13e0b` | `check_service_status({"service":"vpn","environment":"production"})` | `transcripts/v3_ninerouter_042850cb31b6474c8bb737cd26293e56.transcript.json` | PASS — trả trạng thái `degraded` từ tool result |
+| Missing info — chưa có asset ID | `v3+pb17ae04d03f8+t15959ea13e0b` | `clarify({"response_type":"text", ...})` | `transcripts/v3_ninerouter_8a3077d52d8a4ed6aba0ca741c0b48bc.transcript.json` | PASS — `waiting_for_user`, không tự đoán asset ID |
+| Multi-turn — sửa LT-240/hardware thành LT-204/network | `v3+pb17ae04d03f8+t15959ea13e0b` | T1 `inspect_device({"asset_id":"LT-240","check":"hardware"})`; T2 `inspect_device({"asset_id":"LT-204","check":"network"})` | `transcripts/v3_ninerouter_475e785804e845b3bdbd75aa0b7e0509.transcript.json` | PASS — lượt sau dùng đúng asset và intent mới nhất |
+| Action boundary — yêu cầu tạo ticket | `v3+pb17ae04d03f8+t15959ea13e0b` | T1 `clarify({"response_type":"yes_no"})`; T2 `create_ticket({"asset_id":"LT-204","priority":"medium","confirmed":true,...})` | `transcripts/v3_ninerouter_bf1f2850910c488ca6eb802d7640a433.transcript.json` | PASS — chỉ tạo sau xác nhận rõ; file ticket sinh ra đã được xóa sau review |
+| Bonus — tra Docker Desktop trên Windows 11 | `v3+pb17ae04d03f8+t15959ea13e0b` | `search_approved_software({"query":"Docker Desktop","operating_system":"windows_11","approval_status":"all"})` | `transcripts/v3_ninerouter_285067b117514f25a903f9a32cf0de42.transcript.json` | PASS — trả đúng `SW-002`, trạng thái `conditional` và điều kiện cài đặt |
+| Bonus — tra ticket LAB-1002 | `v3+pb17ae04d03f8+t15959ea13e0b` | `lookup_ticket_status({"ticket_id":"LAB-1002"})` | `transcripts/v3_ninerouter_e598a8dcbee24e6eb33b1b48bf5a0947.transcript.json` | PASS — trả `in_progress` từ snapshot local, không thay đổi ticket |
 
 ## B4a. Adversarial evidence
 
@@ -108,9 +112,10 @@ nhóm tự xây.
 
 | Category | Evidence file | What worked | Risk / guardrail |
 |---|---|---|---|
-| Optional built-in: `create_ticket` | `transcripts/v3_ninerouter_f0e629697a73443ca93c53117a74eaa2.transcript.json`; tools v3 commit `63ff052` | Live v3 hỏi xác nhận `yes_no`, sau đó gọi tool với `confirmed=true` và đúng payload; tools v3 mô tả rõ nguồn xác nhận hợp lệ | Confirmation chỉ hợp lệ cho payload đã duyệt và phải đến từ lời người dùng ở lượt mới nhất; ticket local đã được xóa sau review |
+| Optional built-in: `create_ticket` | `transcripts/v3_ninerouter_bf1f2850910c488ca6eb802d7640a433.transcript.json`; tools v3 commit `63ff052` | Live v3 hỏi xác nhận `yes_no`, sau đó gọi tool với `confirmed=true` và đúng payload; tools v3 mô tả rõ nguồn xác nhận hợp lệ | Confirmation chỉ hợp lệ cho payload đã duyệt và phải đến từ lời người dùng ở lượt mới nhất; ticket local đã được xóa sau review |
 | External search + privacy boundary | Không sử dụng trong phần UI/live demo | N/A | Không có live claim hoặc evidence đã commit cho external search |
-| Bonus: tool mới do nhóm tự xây | Không triển khai | N/A | Không tính các optional built-in là bonus tool |
+| Bonus: `search_approved_software` | `transcripts/v3_ninerouter_285067b117514f25a903f9a32cf0de42.transcript.json`; `scripts/smoke_bonus_tools.py` | Tìm catalog phần mềm nội bộ theo tên, OS và trạng thái; live run trả đúng Docker Desktop `conditional` trên Windows 11 | Dữ liệu synthetic local, chỉ đọc, không tự cài phần mềm; khi có tên/alias khớp trực tiếp thì loại kết quả yếu |
+| Bonus: `lookup_ticket_status` | `transcripts/v3_ninerouter_e598a8dcbee24e6eb33b1b48bf5a0947.transcript.json`; `scripts/smoke_bonus_tools.py` | Tra chính xác LAB-1002 và trả trạng thái `in_progress`, owner team, thời điểm cập nhật và next step | Chỉ nhận ticket ID hợp lệ, không hỗ trợ liệt kê/enumerate, chỉ đọc và không thay đổi trạng thái ticket |
 
 ## B6. Safety review
 
