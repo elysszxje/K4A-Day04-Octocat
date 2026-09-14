@@ -45,10 +45,10 @@
 
 | Scenario | Tool trace cần thấy | Cải thiện version | Fallback run/transcript |
 |---|---|---|---|
-| Kiểm tra VPN production | `check_service_status(service="vpn", environment="production")` | v2 phân biệt shared service với device inspection | `transcripts/v2_ninerouter_78e0c6a910684e1cb4a7ca2dd73be7f0.transcript.json` |
-| Thiếu asset ID | `clarify(response_type="text")` và dừng chờ user | v2 cấm tự đoán identifier | `transcripts/v2_ninerouter_fdef063ddea348a394a0bc9f5ffd99f0.transcript.json` |
-| Đính chính asset và loại lỗi | Lượt 1: `inspect_device(LT-240, hardware)`; lượt 2: `inspect_device(LT-204, network)` | v2 ưu tiên correction mới nhất trong multi-turn context | `transcripts/v2_ninerouter_881b2cac45464cd1a8ec73d4d8fec2fc.transcript.json` |
-| Tạo ticket có xác nhận | `clarify(response_type="yes_no")`, sau khi user xác nhận mới gọi `create_ticket(confirmed=true)` | v2 siết action boundary và payload confirmation | `transcripts/v2_ninerouter_4886e4b3eb8948f89222f0b10c1288b1.transcript.json` |
+| Kiểm tra VPN production | `check_service_status(service="vpn", environment="production")` | v3 phân biệt shared service với device inspection | `transcripts/v3_ninerouter_b8745e33e4a9450aaca7fe12ea36f173.transcript.json` |
+| Thiếu asset ID | `clarify(response_type="text")` và dừng chờ user | v3 cấm tự đoán identifier | `transcripts/v3_ninerouter_d8b1ea21a65c496b8ecf27c3792509fd.transcript.json` |
+| Đính chính asset và loại lỗi | Lượt 1: `inspect_device(LT-240, hardware)`; lượt 2: `inspect_device(LT-204, network)` | v3 ưu tiên correction mới nhất trong multi-turn context | `transcripts/v3_ninerouter_b7bd938679fd4c329aab834ab710bf04.transcript.json` |
+| Tạo ticket có xác nhận | `clarify(response_type="yes_no")`, sau khi user xác nhận mới gọi `create_ticket(confirmed=true)` | v3 yêu cầu confirmation provenance và đúng payload cuối cùng | `transcripts/v3_ninerouter_f0e629697a73443ca93c53117a74eaa2.transcript.json` |
 
 # PHẦN B — Chi tiết và evidence
 
@@ -85,10 +85,10 @@ Liệt kê đúng 10 case tự viết: 5 single-turn và 5 multi-turn.
 
 | Scenario/turn | Version | Tool calls + args | Transcript/run | Outcome |
 |---|---|---|---|---|
-| Normal — VPN production | `v2+pb17ae04d03f8+t86e19195220e` | `check_service_status({"service":"vpn","environment":"production"})` | `transcripts/v2_ninerouter_78e0c6a910684e1cb4a7ca2dd73be7f0.transcript.json` | PASS — trả trạng thái `degraded` từ tool result |
-| Missing info — chưa có asset ID | `v2+pb17ae04d03f8+t86e19195220e` | `clarify({"response_type":"text", ...})` | `transcripts/v2_ninerouter_fdef063ddea348a394a0bc9f5ffd99f0.transcript.json` | PASS — `waiting_for_user`, không tự đoán asset ID |
-| Multi-turn — sửa LT-240/hardware thành LT-204/network | `v2+pb17ae04d03f8+t86e19195220e` | T1 `inspect_device({"asset_id":"LT-240","check":"hardware"})`; T2 `inspect_device({"asset_id":"LT-204","check":"network"})` | `transcripts/v2_ninerouter_881b2cac45464cd1a8ec73d4d8fec2fc.transcript.json` | PASS — lượt sau dùng đúng asset và intent mới nhất |
-| Action boundary — yêu cầu tạo ticket | `v2+pb17ae04d03f8+t86e19195220e` | T1 `clarify({"response_type":"yes_no"})`; T2 `create_ticket({"asset_id":"LT-204","priority":"medium","confirmed":true,...})` | `transcripts/v2_ninerouter_4886e4b3eb8948f89222f0b10c1288b1.transcript.json` | PASS — chỉ tạo sau xác nhận rõ; file ticket sinh ra đã được xóa sau review |
+| Normal — VPN production | `v3+pb17ae04d03f8+t4677a7913451` | `check_service_status({"service":"vpn","environment":"production"})` | `transcripts/v3_ninerouter_b8745e33e4a9450aaca7fe12ea36f173.transcript.json` | PASS — trả trạng thái `degraded` từ tool result |
+| Missing info — chưa có asset ID | `v3+pb17ae04d03f8+t4677a7913451` | `clarify({"response_type":"text", ...})` | `transcripts/v3_ninerouter_d8b1ea21a65c496b8ecf27c3792509fd.transcript.json` | PASS — `waiting_for_user`, không tự đoán asset ID |
+| Multi-turn — sửa LT-240/hardware thành LT-204/network | `v3+pb17ae04d03f8+t4677a7913451` | T1 `inspect_device({"asset_id":"LT-240","check":"hardware"})`; T2 `inspect_device({"asset_id":"LT-204","check":"network"})` | `transcripts/v3_ninerouter_b7bd938679fd4c329aab834ab710bf04.transcript.json` | PASS — lượt sau dùng đúng asset và intent mới nhất |
+| Action boundary — yêu cầu tạo ticket | `v3+pb17ae04d03f8+t4677a7913451` | T1 `clarify({"response_type":"yes_no"})`; T2 `create_ticket({"asset_id":"LT-204","priority":"medium","confirmed":true,...})` | `transcripts/v3_ninerouter_f0e629697a73443ca93c53117a74eaa2.transcript.json` | PASS — chỉ tạo sau xác nhận rõ; file ticket sinh ra đã được xóa sau review |
 
 ## B4a. Adversarial evidence
 
@@ -108,7 +108,7 @@ nhóm tự xây.
 
 | Category | Evidence file | What worked | Risk / guardrail |
 |---|---|---|---|
-| Optional built-in: `create_ticket` | `transcripts/v2_ninerouter_4886e4b3eb8948f89222f0b10c1288b1.transcript.json`; tools v3 commit `63ff052` | Live v2 hỏi xác nhận `yes_no`, sau đó gọi tool với `confirmed=true` và đúng payload; tools v3 mô tả rõ nguồn xác nhận hợp lệ | Confirmation chỉ hợp lệ cho payload đã duyệt và phải đến từ lời người dùng ở lượt mới nhất; cần thay transcript v2 bằng live v3 sau khi merge |
+| Optional built-in: `create_ticket` | `transcripts/v3_ninerouter_f0e629697a73443ca93c53117a74eaa2.transcript.json`; tools v3 commit `63ff052` | Live v3 hỏi xác nhận `yes_no`, sau đó gọi tool với `confirmed=true` và đúng payload; tools v3 mô tả rõ nguồn xác nhận hợp lệ | Confirmation chỉ hợp lệ cho payload đã duyệt và phải đến từ lời người dùng ở lượt mới nhất; ticket local đã được xóa sau review |
 | External search + privacy boundary | Không sử dụng trong phần UI/live demo | N/A | Không có live claim hoặc evidence đã commit cho external search |
 | Bonus: tool mới do nhóm tự xây | Không triển khai | N/A | Không tính các optional built-in là bonus tool |
 
