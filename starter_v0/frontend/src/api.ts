@@ -20,7 +20,7 @@ export const getPreview = () =>
 export const createSession = () =>
   request<{ session_id: string; transcript: Transcript }>("/api/sessions", {
     method: "POST",
-    body: JSON.stringify({ version: "v3", history_window: 5, max_tool_rounds: 4 }),
+    body: JSON.stringify({ history_window: 5, max_tool_rounds: 4 }),
   });
 
 export const sendMessage = (sessionId: string, message: string) =>
