@@ -7,7 +7,7 @@
 - **Tên nhóm:** Octocat
 - **Mã lớp / Khóa (KX):** K4A
 - **Tên Repository Fork:** K4A-Day04-Octocat
-- **Model Provider dự kiến:** Gemini
+- **Model Provider:** OpenAI (gpt-4o)
 
 ---
 
