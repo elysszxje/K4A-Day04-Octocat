@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -321,6 +322,7 @@ def main() -> None:
             "result": result,
             "tool_results": tool_results,
         })
+        time.sleep(0.8)
 
     summary = summarize(results)
     args.runs_dir.mkdir(parents=True, exist_ok=True)
