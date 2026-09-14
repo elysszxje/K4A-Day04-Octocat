@@ -1,0 +1,46 @@
+{
+  "snapshot_at": "2026-09-14T09:00:00+07:00",
+  "source": "Northstar Labs Helpdesk Queue (fictional)",
+  "tickets": [
+    {
+      "ticket_id": "LAB-1001",
+      "status": "new",
+      "priority": "medium",
+      "summary": "VPN authentication timeout on LT-204",
+      "asset_id": "LT-204",
+      "owner_team": "Service Desk",
+      "updated_at": "2026-09-14T08:15:00+07:00",
+      "next_step": "Initial triage is queued."
+    },
+    {
+      "ticket_id": "LAB-1002",
+      "status": "in_progress",
+      "priority": "high",
+      "summary": "Outlook profile repeatedly disconnects",
+      "asset_id": "LT-318",
+      "owner_team": "Workplace Applications",
+      "updated_at": "2026-09-14T08:40:00+07:00",
+      "next_step": "Engineer is reviewing client logs."
+    },
+    {
+      "ticket_id": "LAB-1003",
+      "status": "waiting_for_user",
+      "priority": "low",
+      "summary": "Approved software installation request",
+      "asset_id": "DT-031",
+      "owner_team": "Service Desk",
+      "updated_at": "2026-09-13T16:20:00+07:00",
+      "next_step": "Waiting for the requested software name."
+    },
+    {
+      "ticket_id": "LAB-1004",
+      "status": "resolved",
+      "priority": "medium",
+      "summary": "Wi-Fi driver recovery on LT-501",
+      "asset_id": "LT-501",
+      "owner_team": "Endpoint Engineering",
+      "updated_at": "2026-09-13T14:05:00+07:00",
+      "next_step": "No further action unless the issue returns."
+    }
+  ]
+}

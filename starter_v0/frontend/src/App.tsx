@@ -31,6 +31,8 @@ const suggestions = [
   "Kiểm tra trạng thái VPN production giúp tôi.",
   "Máy tính của tôi không kết nối được Wi-Fi.",
   "Tìm hướng dẫn xử lý Outlook bị chậm.",
+  "Docker Desktop có được công ty phê duyệt cho Windows 11 không?",
+  "Kiểm tra trạng thái ticket LAB-1002 giúp tôi.",
 ];
 
 const statusLabels: Record<ChatTurn["status"], string> = {

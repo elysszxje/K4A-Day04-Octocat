@@ -1,0 +1,94 @@
+{
+  "snapshot_at": "2026-09-14T00:00:00+07:00",
+  "source": "Northstar Labs Approved Software Catalog (fictional)",
+  "software": [
+    {
+      "software_id": "SW-001",
+      "name": "Visual Studio Code",
+      "aliases": ["VS Code", "vscode"],
+      "approval_status": "approved",
+      "supported_os": ["windows_11", "macos_14", "ubuntu_22_04"],
+      "approved_release": "managed_latest",
+      "license": "free",
+      "install_method": "Company Portal",
+      "notes": "Extensions that access company data require separate review."
+    },
+    {
+      "software_id": "SW-002",
+      "name": "Docker Desktop",
+      "aliases": ["Docker"],
+      "approval_status": "conditional",
+      "supported_os": ["windows_11", "macos_14"],
+      "approved_release": "managed_latest",
+      "license": "company_subscription",
+      "install_method": "Service Desk request",
+      "notes": "Requires a business justification and virtualization support."
+    },
+    {
+      "software_id": "SW-003",
+      "name": "Slack",
+      "aliases": ["Slack Desktop"],
+      "approval_status": "approved",
+      "supported_os": ["windows_11", "macos_14"],
+      "approved_release": "managed_latest",
+      "license": "company_workspace",
+      "install_method": "Company Portal",
+      "notes": "Use only the managed Northstar Labs workspace."
+    },
+    {
+      "software_id": "SW-004",
+      "name": "Zoom Workplace",
+      "aliases": ["Zoom"],
+      "approval_status": "approved",
+      "supported_os": ["windows_11", "macos_14", "ubuntu_22_04"],
+      "approved_release": "managed_latest",
+      "license": "company_account",
+      "install_method": "Company Portal",
+      "notes": "Sign in with the company SSO account."
+    },
+    {
+      "software_id": "SW-005",
+      "name": "Google Chrome",
+      "aliases": ["Chrome"],
+      "approval_status": "approved",
+      "supported_os": ["windows_11", "macos_14", "ubuntu_22_04"],
+      "approved_release": "managed_channel",
+      "license": "free",
+      "install_method": "Preinstalled or Company Portal",
+      "notes": "Company security policies are applied automatically."
+    },
+    {
+      "software_id": "SW-006",
+      "name": "Postman",
+      "aliases": ["Postman Desktop"],
+      "approval_status": "conditional",
+      "supported_os": ["windows_11", "macos_14", "ubuntu_22_04"],
+      "approved_release": "managed_latest",
+      "license": "team_subscription",
+      "install_method": "Service Desk request",
+      "notes": "Do not sync secrets or production credentials to personal workspaces."
+    },
+    {
+      "software_id": "SW-007",
+      "name": "7-Zip",
+      "aliases": ["7zip"],
+      "approval_status": "approved",
+      "supported_os": ["windows_11"],
+      "approved_release": "managed_latest",
+      "license": "free",
+      "install_method": "Company Portal",
+      "notes": "Use encrypted archives only through approved sharing channels."
+    },
+    {
+      "software_id": "SW-008",
+      "name": "AnyDesk",
+      "aliases": ["Any Desk"],
+      "approval_status": "not_approved",
+      "supported_os": ["windows_11", "macos_14"],
+      "approved_release": null,
+      "license": "not_applicable",
+      "install_method": "Blocked",
+      "notes": "Unmanaged remote-access software is prohibited."
+    }
+  ]
+}

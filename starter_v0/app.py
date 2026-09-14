@@ -149,7 +149,11 @@ def get_preview() -> dict[str, Any]:
 def get_test_cases() -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
     datasets: list[dict[str, Any]] = []
-    for path in (DATA_DIR / "eval_base.json", DATA_DIR / "eval_group.json"):
+    for path in (
+        DATA_DIR / "eval_base.json",
+        DATA_DIR / "eval_group.json",
+        DATA_DIR / "eval_bonus_yohan.json",
+    ):
         dataset = json.loads(path.read_text(encoding="utf-8"))
         dataset_cases = dataset.get("cases", [])
         datasets.append({
