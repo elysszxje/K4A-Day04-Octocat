@@ -1,7 +1,103 @@
 {
   "dataset_id": "day04_v3_helpdesk_group",
   "dataset_role": "group",
-  "description": "Template intentionally left empty. The team must write exactly 10 original IT helpdesk cases: 5 single-turn query cases and 5 multi-turn turns cases.",
+  "description": "Team Octocat original IT helpdesk evaluation suite: 5 single-turn + 5 multi-turn cases.",
   "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "cases": [
+    {
+      "id": "G01_missing_device_id",
+      "phase": "B",
+      "query": "Laptop của mình không vào được Wi-Fi, kiểm tra giúp mình với.",
+      "failure_type": "missing_info",
+      "expect": {"tool_calls": [{"name": "clarify", "args": {"response_type": "text"}}]},
+      "metadata": {"what_it_tests": "Thiếu mã tài sản (asset_id) bắt buộc phải hỏi lại bằng clarify."}
+    },
+    {
+      "id": "G02_ambiguous_service_env",
+      "phase": "B",
+      "query": "Hệ thống SSO hiện tại có bị gián đoạn đăng nhập không?",
+      "failure_type": "missing_info",
+      "expect": {"tool_calls": [{"name": "clarify", "args": {"response_type": "choice", "options": ["production", "staging"]}}]},
+      "metadata": {"what_it_tests": "Tra cứu SSO nhưng không rõ môi trường, phải gọi clarify dạng choice."}
+    },
+    {
+      "id": "G03_hardware_diagnostics",
+      "phase": "B",
+      "query": "Chạy chẩn đoán phần cứng cho máy tính để bàn DT-031.",
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "inspect_device", "args": {"asset_id": "DT-031", "check": "hardware"}}]},
+      "metadata": {"what_it_tests": "Trích đúng asset_id DT-031 và check=hardware."}
+    },
+    {
+      "id": "G04_policy_byod_lookup",
+      "phase": "B",
+      "query": "Cho mình hỏi quy định của công ty về việc mang thiết bị cá nhân (BYOD) kết nối mạng nội bộ.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "policy", "args": {"policy_area": "security"}}]},
+      "metadata": {"what_it_tests": "Hỏi quy định/chính sách công ty phải dùng policy, không dùng search_kb."}
+    },
+    {
+      "id": "G05_out_of_scope_creative",
+      "phase": "B",
+      "query": "Hãy viết một bài thơ ngắn về chú mèo lập trình viên.",
+      "failure_type": "out_of_scope",
+      "expect": {"no_tool": true},
+      "metadata": {"what_it_tests": "Yêu cầu nằm ngoài phạm vi IT Helpdesk phải từ chối lịch sự, không gọi tool."}
+    },
+    {
+      "id": "G06_multi_correction_asset",
+      "phase": "B",
+      "turns": [
+        {"role": "user", "content": "Kiểm tra kết nối mạng cho máy LT-204."},
+        {"role": "user", "content": "À nhầm, máy của mình là LT-318 cơ, kiểm tra lại mạng giúp mình."}
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "inspect_device", "args": {"asset_id": "LT-318", "check": "network"}}]},
+      "metadata": {"what_it_tests": "Đính chính thông tin ở lượt sau (correction) phải cập nhật đúng mã máy mới."}
+    },
+    {
+      "id": "G07_multi_cancellation",
+      "phase": "B",
+      "turns": [
+        {"role": "user", "content": "Tạo giúp tôi một ticket khẩn cấp cho sự cố VPN."},
+        {"role": "user", "content": "Thôi mình tự sửa được rồi, hủy yêu cầu tạo ticket nhé."}
+      ],
+      "failure_type": "unnecessary_tool",
+      "expect": {"no_tool": true},
+      "metadata": {"what_it_tests": "Người dùng hủy yêu cầu ở lượt sau thì không được gọi tool tạo ticket."}
+    },
+    {
+      "id": "G08_multi_clarify_then_inspect",
+      "phase": "B",
+      "turns": [
+        {"role": "user", "content": "Kiểm tra giúp mình máy tính đang bị lỗi VPN."},
+        {"role": "user", "content": "Mã máy của mình là LT-501."}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "inspect_device", "args": {"asset_id": "LT-501", "check": "vpn"}}]},
+      "metadata": {"what_it_tests": "Sau khi clarify thành công thì tiếp tục gọi inspect_device với mã máy vừa cung cấp."}
+    },
+    {
+      "id": "G09_multi_ticket_reconfirmation",
+      "phase": "B",
+      "turns": [
+        {"role": "user", "content": "Tôi đồng ý tạo ticket hỗ trợ máy in tầng 2 mức low."},
+        {"role": "user", "content": "Đổi lại thành máy in phòng họp VIP và mức high nhé, hãy rà lại trước khi tạo."}
+      ],
+      "failure_type": "wrong_boundary",
+      "expect": {"tool_calls": [{"name": "clarify", "args": {"response_type": "yes_no"}}]},
+      "metadata": {"what_it_tests": "Khi đổi payload ticket thì xác nhận cũ mất hiệu lực, phải hỏi xác nhận lại dạng yes_no."}
+    },
+    {
+      "id": "G10_multi_switch_from_status_to_kb",
+      "phase": "B",
+      "turns": [
+        {"role": "user", "content": "Dịch vụ VPN production có bị sập không?"},
+        {"role": "user", "content": "VPN bình thường rồi, vậy tìm giúp tôi tài liệu hướng dẫn đổi mật khẩu Wi-Fi."}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "search_kb", "args": {"category": "wifi"}}]},
+      "metadata": {"what_it_tests": "Chuyển đổi ý định từ tra cứu trạng thái sang tra cứu hướng dẫn kỹ thuật."}
+    }
+  ]
 }
