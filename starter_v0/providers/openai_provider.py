@@ -50,7 +50,27 @@ class OpenAIProvider:
         if tool_choice is not None:
             kwargs["tool_choice"] = tool_choice
 
-        resp = client.chat.completions.create(**kwargs)
+        import re
+        import time
+
+        max_retries = 5
+        resp = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                resp = client.chat.completions.create(**kwargs)
+                break
+            except Exception as exc:
+                err_str = str(exc)
+                if ("429" in err_str or "RateLimitError" in type(exc).__name__ or "rate_limit_exceeded" in err_str) and attempt < max_retries:
+                    delay = 2.0 * attempt
+                    match = re.search(r"try again in (\d+(\.\d+)?)s", err_str)
+                    if match:
+                        delay = max(delay, float(match.group(1)) + 0.5)
+                    print(f"  [OpenAIProvider] TPM rate limit touched. Sleeping {delay:.1f}s before retry...", flush=True)
+                    time.sleep(delay)
+                else:
+                    raise
+
         msg = resp.choices[0].message
         calls: list[ToolCall] = []
         for call in msg.tool_calls or []:
