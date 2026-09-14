@@ -8,3 +8,6 @@ __pycache__/
 /tickets/
 /transcripts/
 /analysis/
+node_modules/
+/frontend/dist/
+*.tsbuildinfo
