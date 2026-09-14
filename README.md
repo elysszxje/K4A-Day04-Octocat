@@ -133,6 +133,129 @@ Automatic grader kiểm tra tool names, expected argument subset, missing/extra
 tool calls và no-tool behavior. Chất lượng câu trả lời, dữ liệu nhạy cảm, tool
 execution result và chất lượng experiment phải được review thủ công.
 
+## Chạy Helpdesk Web UI
+
+Web UI dùng FastAPI cho backend và React + TypeScript cho frontend. Backend phục
+vụ API, chạy agent loop, ghi transcript và phục vụ frontend đã build tại cùng
+một origin.
+
+### 1. Cài dependencies
+
+Yêu cầu máy đã có Python 3.11+ và Node.js 20+.
+
+```bash
+cd starter_v0
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+### 2. Cấu hình môi trường
+
+Tạo file local từ template. File `.env` đã được Git ignore và không được commit.
+
+```bash
+cp .env.example .env
+```
+
+Để dùng một 9Router server có sẵn:
+
+```dotenv
+DEMO_MODE=false
+AGENT_PROVIDER=ninerouter
+NINEROUTER_BASE_URL=http://localhost:20128/v1
+NINEROUTER_API_KEY=<your-9router-api-key>
+NINEROUTER_MODEL=<model-id-from-9router>
+```
+
+`NINEROUTER_MODEL` phải là model ID chính xác mà server trả về. Khi đổi provider,
+model hoặc key, cần restart backend và tạo conversation mới.
+
+Các provider trực tiếp cũng được hỗ trợ:
+
+| Provider | `AGENT_PROVIDER` | Biến API key |
+|---|---|---|
+| Gemini | `gemini` | `GEMINI_API_KEY` |
+| OpenAI | `openai` | `OPENAI_API_KEY` |
+| OpenRouter | `openrouter` | `OPENROUTER_API_KEY` |
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` |
+
+Để chạy demo offline không cần model API:
+
+```dotenv
+DEMO_MODE=true
+```
+
+Demo offline vẫn gọi các tool local thật trên dữ liệu giả lập của lab. Transcript
+demo có `is_evidence: false` và không được dùng làm provider evidence.
+
+### 3. Chạy bản local hoàn chỉnh
+
+Sau khi đã chạy `npm run build`:
+
+```bash
+cd starter_v0
+source .venv/bin/activate
+uvicorn app:app --host 127.0.0.1 --port 8000
+```
+
+Mở <http://127.0.0.1:8000/>. Nếu vừa build lại frontend, dùng hard refresh để
+trình duyệt tải bundle mới.
+
+### 4. Chạy chế độ development
+
+Chạy backend và Vite trong hai terminal riêng:
+
+```bash
+# Terminal 1
+cd starter_v0
+source .venv/bin/activate
+uvicorn app:app --reload --host 127.0.0.1 --port 8000
+```
+
+```bash
+# Terminal 2
+cd starter_v0/frontend
+npm run dev
+```
+
+Mở <http://127.0.0.1:5173/>. Vite proxy mọi request `/api` sang FastAPI tại
+cổng `8000`.
+
+### 5. Sử dụng giao diện
+
+- Gửi câu hỏi ở vùng chat trung tâm. Câu trả lời hỗ trợ Markdown.
+- Tool trace bên phải cập nhật theo từng round, tool call và tool result.
+- Kéo mép sidebar trái hoặc Tool trace để thay đổi chiều rộng trên desktop.
+- Mỗi trace card và toàn bộ trace panel có vùng cuộn riêng.
+- Bấm **Test cases** để mở toàn bộ case từ `eval_base.json` và
+  `eval_group.json`. Single-turn dùng nút **Run**; multi-turn cần bấm lần lượt
+  **Turn 1**, **Turn 2**, **Turn 3** trong cùng conversation.
+- Bấm **Download transcript** để tải transcript JSON của live session.
+- Bấm **New conversation** sau khi đổi model hoặc khi muốn reset context.
+
+### 6. Kiểm tra nhanh
+
+```bash
+cd starter_v0
+source .venv/bin/activate
+
+python scripts/smoke_tools.py
+python scripts/preflight_provider.py --provider ninerouter
+
+cd frontend
+npm run build
+```
+
+Preflight phải trả về ít nhất một structured `tool_call`. Nếu model chỉ trả text,
+hãy kiểm tra model ID và khả năng tool calling trên 9Router.
+
 ## Tool mới của nhóm — Bonus
 
 Học viên không bắt buộc phải viết thêm tool để hoàn thành core lab.
