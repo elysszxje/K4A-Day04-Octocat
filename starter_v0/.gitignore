@@ -9,3 +9,6 @@ __pycache__/
 /runs/
 /transcripts/
 /analysis/
+node_modules/
+/frontend/dist/
+*.tsbuildinfo
