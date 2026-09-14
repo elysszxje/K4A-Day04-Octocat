@@ -110,6 +110,19 @@ def transcript_path(session: ChatSession) -> Path:
     return TRANSCRIPTS_DIR / f"{session.transcript['transcript_id']}.transcript.json"
 
 
+def portable_transcript_value(value: Any) -> Any:
+    """Replace local project prefixes before values reach the API or transcript."""
+    if isinstance(value, dict):
+        return {key: portable_transcript_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [portable_transcript_value(item) for item in value]
+    if isinstance(value, str):
+        root_prefix = f"{ROOT}{os.sep}"
+        if value.startswith(root_prefix):
+            return value[len(root_prefix):]
+    return value
+
+
 @app.get("/api/config")
 def get_config() -> dict[str, Any]:
     artifact = current_artifact_version()
@@ -221,15 +234,22 @@ def run_turn(
     }
     if event_callback:
         event_callback({"type": "turn_started", "turn": dict(turn)})
+    stream_callback = (
+        (lambda event: event_callback(portable_transcript_value(event)))
+        if event_callback
+        else None
+    )
 
     try:
-        result = run_model_tool_loop(
-            provider=provider,
-            messages=messages,
-            tools=tools,
-            model=transcript["model"],
-            max_tool_rounds=transcript["max_tool_rounds"],
-            event_callback=event_callback,
+        result = portable_transcript_value(
+            run_model_tool_loop(
+                provider=provider,
+                messages=messages,
+                tools=tools,
+                model=transcript["model"],
+                max_tool_rounds=transcript["max_tool_rounds"],
+                event_callback=stream_callback,
+            )
         )
         turn.update(result)
         assistant_text = result["assistant_text"]
