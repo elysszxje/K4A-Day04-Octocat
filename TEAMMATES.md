@@ -3,7 +3,7 @@
 - **Tên nhóm:** Octocat
 - **Mã lớp / Khóa:** K4A
 - **Tên Repository Fork:** K4A-Day04-Octocat
-- **Model Provider:** Gemini
+- **Model Provider:** OpenAI (gpt-4o)
 
 | STT | Họ và tên | Mã sinh viên (MSSV) | GitHub Username | Email | Vai trò trong nhóm |
 |:---:|:---|:---|:---|:---|:---|
