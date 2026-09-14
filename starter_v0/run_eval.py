@@ -322,6 +322,7 @@ def main() -> None:
             "result": result,
             "tool_results": tool_results,
         })
+        time.sleep(0.8)
 
     summary = summarize(results)
     args.runs_dir.mkdir(parents=True, exist_ok=True)
