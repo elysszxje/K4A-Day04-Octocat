@@ -26,6 +26,7 @@ ROOT = Path(__file__).parent
 ARTIFACTS_DIR = ROOT / "artifacts"
 SYSTEM_PROMPT_PATH = ARTIFACTS_DIR / "system_prompt.md"
 TOOLS_PATH = ARTIFACTS_DIR / "tools.yaml"
+DATA_DIR = ROOT / "data"
 TRANSCRIPTS_DIR = ROOT / "transcripts"
 PREVIEW_PATH = ROOT / "samples" / "transcripts" / "example_helpdesk.transcript.json"
 FRONTEND_DIST = ROOT / "frontend" / "dist"
@@ -129,6 +130,39 @@ def get_preview() -> dict[str, Any]:
 
     preview = json.loads(PREVIEW_PATH.read_text(encoding="utf-8"))
     return {"is_evidence": False, "transcript": preview}
+
+
+@app.get("/api/test-cases")
+def get_test_cases() -> dict[str, Any]:
+    cases: list[dict[str, Any]] = []
+    datasets: list[dict[str, Any]] = []
+    for path in (DATA_DIR / "eval_base.json", DATA_DIR / "eval_group.json"):
+        dataset = json.loads(path.read_text(encoding="utf-8"))
+        dataset_cases = dataset.get("cases", [])
+        datasets.append({
+            "dataset_id": dataset.get("dataset_id", path.stem),
+            "role": dataset.get("dataset_role"),
+            "count": len(dataset_cases),
+        })
+        for case in dataset_cases:
+            prompts = [case["query"]] if case.get("query") else [
+                turn["content"] for turn in case.get("turns", []) if turn.get("role") == "user"
+            ]
+            expected_tools = [
+                call.get("name") for call in case.get("expect", {}).get("tool_calls", []) if call.get("name")
+            ]
+            metadata = case.get("metadata", {})
+            cases.append({
+                "id": case["id"],
+                "suite": case.get("suite"),
+                "failure_type": case.get("failure_type"),
+                "difficulty": metadata.get("difficulty"),
+                "skill": metadata.get("skill"),
+                "description": metadata.get("what_it_tests"),
+                "prompts": prompts,
+                "expected_tools": expected_tools,
+            })
+    return {"datasets": datasets, "count": len(cases), "cases": cases}
 
 
 @app.post("/api/sessions", status_code=201)

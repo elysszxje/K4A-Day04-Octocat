@@ -10,6 +10,7 @@ import {
   CircleDot,
   Clipboard,
   Download,
+  ListChecks,
   Menu,
   MessageSquareText,
   PanelRight,
@@ -18,12 +19,13 @@ import {
   ServerCog,
   ShieldCheck,
   Sparkles,
+  Search,
   User,
   Wrench,
   X,
 } from "lucide-react";
-import { createSession, getConfig, getPreview, getTranscript, streamMessage } from "./api";
-import type { AgentRound, AppConfig, ChatTurn, StreamEvent, Transcript } from "./types";
+import { createSession, getConfig, getPreview, getTestCases, getTranscript, streamMessage } from "./api";
+import type { AgentRound, AppConfig, ChatTurn, StreamEvent, TestCase, Transcript } from "./types";
 
 const suggestions = [
   "Kiểm tra trạng thái VPN production giúp tôi.",
@@ -54,8 +56,13 @@ function providerLabel(provider: string) {
 }
 
 function parseAssistantDisplay(text: string | null) {
-  if (!text) return { reply: "", evidenceIds: [] as string[] };
-  const candidate = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  if (!text) return { reply: "", evidenceIds: [] as string[], jsonText: null as string | null };
+  let candidate = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  if (candidate.startsWith("`") && candidate.endsWith("`")) candidate = candidate.slice(1, -1).trim();
+  candidate = candidate.replace(/^json\s*(?=\{)/i, "");
+  const objectStart = candidate.indexOf("{");
+  const objectEnd = candidate.lastIndexOf("}");
+  if (objectStart >= 0 && objectEnd > objectStart) candidate = candidate.slice(objectStart, objectEnd + 1);
   try {
     const payload = JSON.parse(candidate) as { reply?: unknown; evidence_ids?: unknown };
     if (typeof payload.reply === "string") {
@@ -64,12 +71,13 @@ function parseAssistantDisplay(text: string | null) {
         evidenceIds: Array.isArray(payload.evidence_ids)
           ? payload.evidence_ids.filter((item): item is string => typeof item === "string")
           : [],
+        jsonText: JSON.stringify(payload, null, 2),
       };
     }
   } catch {
     // Providers may return ordinary text for clarification or errors.
   }
-  return { reply: text, evidenceIds: [] as string[] };
+  return { reply: text, evidenceIds: [] as string[], jsonText: null as string | null };
 }
 
 function applyStreamEvent(current: ChatTurn | null, event: StreamEvent): ChatTurn | null {
@@ -112,6 +120,7 @@ function ArtifactRow({ label, value }: { label: string; value: string }) {
 function ToolRound({ round }: { round: AgentRound }) {
   const [open, setOpen] = useState(true);
   const hasError = round.tool_results.some((event) => Boolean(event.result?.error));
+  const display = parseAssistantDisplay(round.assistant_text);
   return (
     <div className={`trace-card ${hasError ? "trace-error" : ""}`}>
       <button className="trace-summary" onClick={() => setOpen((value) => !value)}>
@@ -124,7 +133,9 @@ function ToolRound({ round }: { round: AgentRound }) {
       </button>
       {open && (
         <div className="trace-body">
-          {round.assistant_text && <p className="round-text">{round.assistant_text}</p>}
+          {round.assistant_text && (display.jsonText
+            ? <pre className="model-response-json">{display.jsonText}</pre>
+            : <div className="round-text markdown-body"><ReactMarkdown remarkPlugins={[remarkGfm]}>{display.reply}</ReactMarkdown></div>)}
           {round.tool_results.map((event, index) => (
             <div className="tool-event" key={`${event.tool}-${index}`}>
               <div className="tool-name"><Wrench size={14} /> {event.tool}</div>
@@ -180,6 +191,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [traceOpen, setTraceOpen] = useState(false);
+  const [testCasesOpen, setTestCasesOpen] = useState(false);
+  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [testCaseSearch, setTestCaseSearch] = useState("");
   const [sidebarWidth, setSidebarWidth] = useState(272);
   const [traceWidth, setTraceWidth] = useState(360);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -224,6 +238,9 @@ function App() {
         }
       })
       .catch((reason: Error) => setError(reason.message));
+    getTestCases()
+      .then((value) => setTestCases(value.cases))
+      .catch((reason: Error) => setError(reason.message));
   }, []);
 
   useEffect(() => {
@@ -236,6 +253,17 @@ function App() {
   const turns = transcript?.turns ?? [];
   const visibleTraceTurns = pendingTraceTurn ? [...turns, pendingTraceTurn] : turns;
   const toolCount = useMemo(() => visibleTraceTurns.reduce((sum, turn) => sum + turn.tool_events.length, 0), [visibleTraceTurns]);
+  const filteredTestCases = useMemo(() => {
+    const query = testCaseSearch.trim().toLocaleLowerCase();
+    if (!query) return testCases;
+    return testCases.filter((testCase) => [
+      testCase.id,
+      testCase.skill,
+      testCase.description,
+      ...testCase.prompts,
+      ...testCase.expected_tools,
+    ].some((value) => value?.toLocaleLowerCase().includes(query)));
+  }, [testCases, testCaseSearch]);
 
   async function ensureSession() {
     if (sessionId && transcript) return { id: sessionId, baseTranscript: transcript };
@@ -353,6 +381,7 @@ function App() {
         <header className="topbar">
           <button className="icon-button mobile-only" onClick={() => setSidebarOpen(true)} aria-label="Mở sidebar"><Menu size={20} /></button>
           <div className="title-block"><h1>IT Helpdesk Agent</h1><span>Tool-calling workspace</span></div>
+          <button className="test-cases-button" onClick={() => setTestCasesOpen(true)}><ListChecks size={16} /><span>Test cases</span><b>{testCases.length}</b></button>
           <div className={`connection-pill ${config.live_available ? "online" : "preview"}`}>
             <span className="connection-dot" />
             {config.live_available ? "Online" : isDemo ? "Demo offline" : "Preview mode"}
@@ -435,6 +464,35 @@ function App() {
 
       <div className="desktop-trace"><button className="resize-handle trace-resizer" aria-label="Thay đổi chiều rộng Tool trace" onPointerDown={(event) => beginResize("trace", event)} onDoubleClick={() => setTraceWidth(360)} onKeyDown={(event) => resizeWithKeyboard("trace", event.key)} /><TracePanel turns={visibleTraceTurns} /></div>
       {traceOpen && <div className="trace-drawer"><button className="mobile-backdrop" onClick={() => setTraceOpen(false)} /><TracePanel turns={visibleTraceTurns} onClose={() => setTraceOpen(false)} /></div>}
+      {testCasesOpen && (
+        <div className="test-cases-overlay">
+          <button className="test-cases-backdrop" onClick={() => setTestCasesOpen(false)} aria-label="Đóng test cases" />
+          <section className="test-cases-panel" aria-label="Test cases">
+            <div className="test-cases-header">
+              <div><span className="eyebrow">Evaluation prompts</span><h2>Test cases <small>{filteredTestCases.length}/{testCases.length}</small></h2></div>
+              <button className="icon-button" onClick={() => setTestCasesOpen(false)} aria-label="Đóng test cases"><X size={18} /></button>
+            </div>
+            <label className="test-search"><Search size={16} /><input value={testCaseSearch} onChange={(event) => setTestCaseSearch(event.target.value)} placeholder="Tìm ID, prompt hoặc tool…" /></label>
+            <div className="test-cases-scroll">
+              {filteredTestCases.map((testCase) => (
+                <article className="test-case-card" key={testCase.id}>
+                  <div className="test-case-meta"><strong>{testCase.id}</strong><span>{testCase.difficulty}</span><span>{testCase.prompts.length > 1 ? `${testCase.prompts.length} turns` : "single turn"}</span></div>
+                  {testCase.description && <p>{testCase.description}</p>}
+                  {testCase.expected_tools.length > 0 && <div className="expected-tools">Expected: {testCase.expected_tools.map((tool) => <code key={tool}>{tool}</code>)}</div>}
+                  <div className="test-prompts">
+                    {testCase.prompts.map((prompt, index) => (
+                      <button key={`${testCase.id}-${index}`} disabled={!canChat || loading} onClick={() => { setTestCasesOpen(false); void handleSubmit(undefined, prompt); }}>
+                        <span>{testCase.prompts.length > 1 ? `Turn ${index + 1}` : "Run"}</span><p>{prompt}</p><Send size={14} />
+                      </button>
+                    ))}
+                  </div>
+                </article>
+              ))}
+              {!filteredTestCases.length && <div className="empty-test-cases">Không tìm thấy test case phù hợp.</div>}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

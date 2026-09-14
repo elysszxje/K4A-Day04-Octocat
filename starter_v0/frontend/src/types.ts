@@ -68,3 +68,14 @@ export type StreamEvent =
   | { type: "tool_completed"; round: number; event: ToolEvent }
   | { type: "turn_finished"; turn: ChatTurn }
   | { type: "stream_error"; message: string };
+
+export interface TestCase {
+  id: string;
+  suite: string | null;
+  failure_type: string | null;
+  difficulty: string | null;
+  skill: string | null;
+  description: string | null;
+  prompts: string[];
+  expected_tools: string[];
+}

@@ -1,4 +1,4 @@
-import type { AppConfig, ChatTurn, StreamEvent, Transcript } from "./types";
+import type { AppConfig, ChatTurn, StreamEvent, TestCase, Transcript } from "./types";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -16,6 +16,9 @@ export const getConfig = () => request<AppConfig>("/api/config");
 
 export const getPreview = () =>
   request<{ is_evidence: false; transcript: Transcript }>("/api/preview");
+
+export const getTestCases = () =>
+  request<{ count: number; cases: TestCase[] }>("/api/test-cases");
 
 export const createSession = () =>
   request<{ session_id: string; transcript: Transcript }>("/api/sessions", {
