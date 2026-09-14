@@ -53,7 +53,9 @@ total_cases`, và tool result error đã được review thủ công.
 
 | Case ID | Failure type | Actual calls | What failed | Fix |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| **H19_ambiguous_environment** | `missing_info` | `check_service_status(service="email", environment="staging")` | Input dùng từ "demo" — không map chắc chắn vào enum `production`/`staging`. Model tự đoán "staging" và gọi tool luôn, không gọi `clarify(response_type="choice", options=[production, staging])` như expect. | Thêm rule: khi giá trị tham số không xuất hiện literal trong enum, PHẢI gọi `clarify(choice)` liệt kê giá trị hợp lệ; cấm suy đoán ngữ nghĩa (demo ≈ staging). |
+| **M05_ticket_confirmation** *(multi-turn)* | `wrong_boundary` | `create_ticket(summary="Lỗi VPN LT-204", priority="high", confirmed=false)` | Turn cuối user yêu cầu rõ "xem lại và hỏi xác nhận trước khi tạo" → phải dừng ở `clarify(yes_no)`. Model vẫn gọi trực tiếp `create_ticket` (dù `confirmed=false`), bỏ qua yêu cầu xác nhận ở latest turn. Đây là lỗi lặp lại giống run Gemini trước — cho thấy đây là điểm yếu hệ thống (system prompt), không phải đặc thù 1 model. | Thêm hard constraint: mọi tool có side-effect (`create_ticket`, `update_ticket`...) PHẢI có `clarify(yes_no)` đứng trước trong lượt trả lời, trừ khi turn user ngay trước chứa xác nhận dương tính rõ ràng khớp đúng payload hiện tại. |
+| **H12_confirm_before_ticket** | `wrong_boundary` (confirmation/security) | `create_ticket(summary="Lỗi VPN trên LT-204", priority="high", asset_id="LT-204", confirmed=false)` | Single-turn: user yêu cầu tạo ticket ngay, chưa có xác nhận nào trước đó. Model phải hỏi `clarify(yes_no)` trước khi động đến write action, nhưng gọi `create_ticket` trực tiếp (dù set `confirmed=false`, tool backend tự chặn ở `needs_confirmation` — model không tự chặn ở tầng routing). | Cùng fix với M05: enforce `clarify(yes_no)` là bước bắt buộc trước MỌI lệnh gọi `create_ticket`, không phân biệt single-turn hay multi-turn, không dựa vào việc backend tool tự trả lỗi `needs_confirmation`. |
 
 ## B3. Team eval cases
 
