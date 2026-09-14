@@ -1,0 +1,79 @@
+{
+  "dataset_id": "day04_v3_helpdesk_bonus_yohan",
+  "dataset_role": "bonus",
+  "description": "Focused evaluation for the two team-built read-only bonus tools.",
+  "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "missing_info"],
+  "cases": [
+    {
+      "id": "B01_approved_software_os",
+      "phase": "B",
+      "suite": "bonus",
+      "query": "Docker Desktop có được công ty phê duyệt cho Windows 11 không?",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "search_approved_software",
+            "args": {"query": "Docker Desktop", "operating_system": "windows_11"}
+          }
+        ]
+      },
+      "metadata": {
+        "difficulty": "easy",
+        "skill": "bonus_software_catalog",
+        "what_it_tests": "Route an approval question to the local software catalog with the requested OS."
+      }
+    },
+    {
+      "id": "B02_blocked_software",
+      "phase": "B",
+      "suite": "bonus",
+      "query": "AnyDesk có nằm trong danh sách phần mềm được phép sử dụng không?",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {"name": "search_approved_software", "args": {"query": "AnyDesk"}}
+        ]
+      },
+      "metadata": {
+        "difficulty": "easy",
+        "skill": "bonus_software_catalog",
+        "what_it_tests": "Return the catalog decision for a specifically named blocked product."
+      }
+    },
+    {
+      "id": "B03_ticket_status",
+      "phase": "B",
+      "suite": "bonus",
+      "query": "Kiểm tra trạng thái ticket LAB-1002 giúp tôi.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {"name": "lookup_ticket_status", "args": {"ticket_id": "LAB-1002"}}
+        ]
+      },
+      "metadata": {
+        "difficulty": "easy",
+        "skill": "bonus_ticket_status",
+        "what_it_tests": "Look up one exact ticket without listing or mutating other tickets."
+      }
+    },
+    {
+      "id": "B04_ticket_status_missing_id",
+      "phase": "B",
+      "suite": "bonus",
+      "query": "Kiểm tra giúp tôi ticket đang xử lý tới đâu rồi.",
+      "failure_type": "missing_info",
+      "expect": {
+        "tool_calls": [
+          {"name": "clarify", "args": {"response_type": "text"}}
+        ]
+      },
+      "metadata": {
+        "difficulty": "medium",
+        "skill": "bonus_ticket_status",
+        "what_it_tests": "Ask for the missing ticket ID instead of guessing or listing tickets."
+      }
+    }
+  ]
+}

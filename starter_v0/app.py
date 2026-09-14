@@ -33,7 +33,7 @@ FRONTEND_DIST = ROOT / "frontend" / "dist"
 
 DEFAULT_PROVIDER_NAME = "gemini"
 DEMO_PROVIDER_NAME = "demo"
-DEFAULT_VERSION = "v2"
+DEFAULT_VERSION = "v3"
 DEFAULT_HISTORY_WINDOW = 5
 DEFAULT_MAX_TOOL_ROUNDS = 4
 
@@ -110,6 +110,19 @@ def transcript_path(session: ChatSession) -> Path:
     return TRANSCRIPTS_DIR / f"{session.transcript['transcript_id']}.transcript.json"
 
 
+def portable_transcript_value(value: Any) -> Any:
+    """Replace local project prefixes before values reach the API or transcript."""
+    if isinstance(value, dict):
+        return {key: portable_transcript_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [portable_transcript_value(item) for item in value]
+    if isinstance(value, str):
+        root_prefix = f"{ROOT}{os.sep}"
+        if value.startswith(root_prefix):
+            return value[len(root_prefix):]
+    return value
+
+
 @app.get("/api/config")
 def get_config() -> dict[str, Any]:
     artifact = current_artifact_version()
@@ -136,7 +149,11 @@ def get_preview() -> dict[str, Any]:
 def get_test_cases() -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
     datasets: list[dict[str, Any]] = []
-    for path in (DATA_DIR / "eval_base.json", DATA_DIR / "eval_group.json"):
+    for path in (
+        DATA_DIR / "eval_base.json",
+        DATA_DIR / "eval_group.json",
+        DATA_DIR / "eval_bonus_yohan.json",
+    ):
         dataset = json.loads(path.read_text(encoding="utf-8"))
         dataset_cases = dataset.get("cases", [])
         datasets.append({
@@ -180,8 +197,8 @@ def create_session(payload: SessionCreate) -> dict[str, Any]:
         "provider": session_provider,
         "model": provider_model(payload.model),
         "is_evidence": not demo_enabled(),
-        "system_prompt": str(SYSTEM_PROMPT_PATH),
-        "tools": str(TOOLS_PATH),
+        "system_prompt": "artifacts/system_prompt.md",
+        "tools": "artifacts/tools.yaml",
         "history_window": payload.history_window,
         "max_tool_rounds": payload.max_tool_rounds,
         "created_at": created_at,
@@ -221,15 +238,22 @@ def run_turn(
     }
     if event_callback:
         event_callback({"type": "turn_started", "turn": dict(turn)})
+    stream_callback = (
+        (lambda event: event_callback(portable_transcript_value(event)))
+        if event_callback
+        else None
+    )
 
     try:
-        result = run_model_tool_loop(
-            provider=provider,
-            messages=messages,
-            tools=tools,
-            model=transcript["model"],
-            max_tool_rounds=transcript["max_tool_rounds"],
-            event_callback=event_callback,
+        result = portable_transcript_value(
+            run_model_tool_loop(
+                provider=provider,
+                messages=messages,
+                tools=tools,
+                model=transcript["model"],
+                max_tool_rounds=transcript["max_tool_rounds"],
+                event_callback=stream_callback,
+            )
         )
         turn.update(result)
         assistant_text = result["assistant_text"]
