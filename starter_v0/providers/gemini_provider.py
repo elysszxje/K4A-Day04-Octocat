@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
 from typing import Any
 
 from providers.base import ModelResponse, ToolCall
@@ -73,7 +75,7 @@ class GeminiProvider:
         self,
         *,
         api_key_env: str = "GEMINI_API_KEY",
-        default_model: str = "gemini-3.5-flash",
+        default_model: str = "gemini-3.6-flash",
     ) -> None:
         self.api_key_env = api_key_env
         self.default_model = default_model
@@ -106,11 +108,31 @@ class GeminiProvider:
             config_kwargs["tools"] = [types.Tool(function_declarations=declarations)]
 
         client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(
-            model=model or self.default_model,
-            contents=contents,
-            config=types.GenerateContentConfig(**config_kwargs),
-        )
+        target_model = model or self.default_model
+
+        max_retries = 8
+        base_delay = 12.0
+        resp = None
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                resp = client.models.generate_content(
+                    model=target_model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(**config_kwargs),
+                )
+                break
+            except Exception as exc:
+                err_str = str(exc)
+                if ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
+                    delay = base_delay * (1.3 ** (attempt - 1))
+                    match = re.search(r"retry in (\d+(\.\d+)?)s", err_str)
+                    if match:
+                        delay = max(delay, float(match.group(1)) + 1.0)
+                    print(f"  [GeminiProvider] 429 rate limit hit. Sleeping {delay:.1f}s before retry {attempt}/{max_retries}...", flush=True)
+                    time.sleep(delay)
+                else:
+                    raise
 
         text_parts: list[str] = []
         calls: list[ToolCall] = []
