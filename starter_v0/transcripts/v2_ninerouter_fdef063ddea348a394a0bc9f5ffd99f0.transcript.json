@@ -1,0 +1,73 @@
+{
+  "transcript_id": "v2_ninerouter_fdef063ddea348a394a0bc9f5ffd99f0",
+  "version": "v2",
+  "artifact_version": "v2+pb17ae04d03f8+t86e19195220e",
+  "prompt_hash": "b17ae04d03f8811322177f4e60b0d27e5121f5a5a9ebeae1751192e264dfc6d7",
+  "tools_hash": "86e19195220e2c3deba00196baa9d00bd06380b4317f92a4b5c6a302ff616bdb",
+  "provider": "ninerouter",
+  "model": "ag/gemini-3.7-flash-low",
+  "is_evidence": true,
+  "system_prompt": "artifacts/system_prompt.md",
+  "tools": "artifacts/tools.yaml",
+  "history_window": 5,
+  "max_tool_rounds": 4,
+  "created_at": "2026-09-14T20:17:46",
+  "updated_at": "2026-09-14T20:17:50",
+  "turns": [
+    {
+      "turn_index": 1,
+      "started_at": "2026-09-14T20:17:46",
+      "user": "Máy tính của tôi bị hỏng. Hãy kiểm tra thiết bị giúp tôi.",
+      "status": "waiting_for_user",
+      "assistant_text": "Vui lòng cung cấp mã tài sản (Asset ID) của thiết bị để tôi có thể tiến hành kiểm tra giúp bạn.",
+      "rounds": [
+        {
+          "round": 1,
+          "assistant_text": null,
+          "tool_calls": [
+            {
+              "name": "clarify",
+              "args": {
+                "response_type": "text",
+                "question": "Vui lòng cung cấp mã tài sản (Asset ID) của thiết bị để tôi có thể tiến hành kiểm tra giúp bạn."
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "tool": "clarify",
+              "args": {
+                "response_type": "text",
+                "question": "Vui lòng cung cấp mã tài sản (Asset ID) của thiết bị để tôi có thể tiến hành kiểm tra giúp bạn."
+              },
+              "result": {
+                "tool": "clarify",
+                "question": "Vui lòng cung cấp mã tài sản (Asset ID) của thiết bị để tôi có thể tiến hành kiểm tra giúp bạn.",
+                "response_type": "text",
+                "options": [],
+                "awaiting_user": true
+              }
+            }
+          ]
+        }
+      ],
+      "tool_events": [
+        {
+          "tool": "clarify",
+          "args": {
+            "response_type": "text",
+            "question": "Vui lòng cung cấp mã tài sản (Asset ID) của thiết bị để tôi có thể tiến hành kiểm tra giúp bạn."
+          },
+          "result": {
+            "tool": "clarify",
+            "question": "Vui lòng cung cấp mã tài sản (Asset ID) của thiết bị để tôi có thể tiến hành kiểm tra giúp bạn.",
+            "response_type": "text",
+            "options": [],
+            "awaiting_user": true
+          }
+        }
+      ],
+      "ended_at": "2026-09-14T20:17:50"
+    }
+  ]
+}

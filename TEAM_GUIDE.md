@@ -86,7 +86,7 @@ Bài lab này yêu cầu nhóm xây dựng và tối ưu một **IT Helpdesk Age
 | **2** | **Nguyễn Tiến Tuân**<br>`2A202602595` | `t00-tuannguyen` | **Tool Calling & Schema Engineer**<br>• Interface & Data Boundaries Specialist | • `starter_v0/artifacts/tools.yaml`<br>• Smoke tests bộ 9 local tools<br>• `REPORT.md` (Mục A2, B7) |
 | **3** | **Võ Minh Quân**<br>`2A202602429` | `vminhquan` | **Evaluation & Benchmarking Lead**<br>• Dataset & Metrics Engineer | • `starter_v0/data/eval_group.json` (10 cases)<br>• File run kết quả `runs/*.json`<br>• `REPORT.md` (Mục B1, B2, B3) |
 | **4** | **Vũ Duy Điệp**<br>`2A202602703` | `VuDuyDiepAI` | **Security, Safety & Red-teaming Specialist**<br>• Action Boundary & Privacy Guardian | • Chạy bộ test `eval_adversarial.json`<br>• Manual review 3 security cases<br>• Rà soát filesystem `tickets/`<br>• `REPORT.md` (Mục B4a, B6) |
-| **5** | **Võ Phú Hãn**<br>`2A202602628` | `yohan-vinai` | **UI/UX & Live Demonstration Lead**<br>• Chatbot Interface & Bonus Capability | • `starter_v0/app.py` (Streamlit UI)<br>• 4 file transcript live chat<br>• Kịch bản demo & Hỗ trợ Bonus tool<br>• `REPORT.md` (Mục A3, A4, B4, B5) |
+| **5** | **Võ Phú Hãn**<br>`2A202602628` | `yohan-vinai` | **UI/UX & Live Demonstration Lead**<br>• Chatbot Interface & Bonus Capability | • FastAPI backend `starter_v0/app.py`<br>• React UI `starter_v0/frontend/`<br>• 4 file transcript live chat<br>• Kịch bản demo & Hỗ trợ Bonus tool<br>• `REPORT.md` (Mục A3, A4, B4, B5) |
 
 ---
 
@@ -302,7 +302,8 @@ Bài lab này yêu cầu nhóm xây dựng và tối ưu một **IT Helpdesk Age
 ### THÀNH VIÊN 5: VÕ PHÚ HÃN — UI/UX & LIVE DEMONSTRATION LEAD
 
 #### File phụ trách trực tiếp:
-- `starter_v0/app.py` (Ứng dụng Streamlit)
+- `starter_v0/app.py` (FastAPI backend)
+- `starter_v0/frontend/` (React + TypeScript UI)
 - `starter_v0/transcripts/*.json` (File transcript ghi nhận live chat)
 - `starter_v0/artifacts/REPORT.md` (Mục A3: Câu hỏi mẫu, A4: Kịch bản demo, B4: Live chat evidence, B5: Bonus tool nếu có)
 
@@ -312,23 +313,33 @@ Bài lab này yêu cầu nhóm xây dựng và tối ưu một **IT Helpdesk Age
    ```powershell
    git switch -c contrib/yohan-vinai
    ```
-2. **Xây dựng Giao diện Streamlit (`starter_v0/app.py`):**
-   - Cài đặt Streamlit:
+2. **Xây dựng giao diện React và FastAPI:**
+   - Cài Python dependencies từ `starter_v0/requirements.txt`, sau đó cài và build frontend:
      ```powershell
      cd starter_v0
-     python -m pip install "streamlit>=1.30.0"
+     python -m pip install -r requirements.txt
+     cd frontend
+     npm install
+     npm run build
+     cd ..
      ```
-   - Viết file `app.py` với các yêu cầu quan trọng:
+   - Backend và UI phải đáp ứng các yêu cầu quan trọng:
      * **Tái sử dụng hàm `run_model_tool_loop`** từ file `starter_v0/chat.py` (tuyệt đối không tự viết loop riêng để tránh lệch chuẩn).
      * Giao diện hiển thị minh bạch:
        - Lịch sử chat câu hỏi của User & phản hồi của Assistant.
        - Panel hoặc Expander hiển thị: **Tool Name**, **Arguments truyền vào**, **Tool Result / Error**, **Round index**.
        - Hiển thị thông tin phiên bản Artifact (`artifact_version`, mã băm prompt hash, tools hash).
        - Nút xem hoặc tải transcript của phiên chat.
-   - Chạy thử UI:
+       - Tool trace cập nhật theo từng event; hai sidebar có scroll riêng và thay đổi được chiều rộng.
+       - API key chỉ đọc ở backend từ `.env`, không gửi xuống trình duyệt.
+   - Build và chạy bản local hoàn chỉnh:
      ```powershell
-     streamlit run app.py
+     cd starter_v0/frontend
+     npm run build
+     cd ..
+     uvicorn app:app --host 127.0.0.1 --port 8000
      ```
+     Mở `http://127.0.0.1:8000/`. Xem hướng dẫn cấu hình 9Router, provider trực tiếp và demo offline trong `README.md`.
 3. **Thu thập Live Transcript Evidence (4 Kịch bản Bắt buộc):**
    Chạy ứng dụng hoặc qua CLI `chat.py` để ghi lại 4 kịch bản thực tế:
    ```powershell
@@ -350,8 +361,9 @@ Bài lab này yêu cầu nhóm xây dựng và tối ưu một **IT Helpdesk Age
    - Tự viết phần **Self-reflection C2** của mình trong `REPORT.md`.
    - Commit và push:
      ```powershell
-     git add app.py transcripts/ artifacts/REPORT.md
-     git commit -m "feat(ui): implement Streamlit chat app, record live transcripts and draft A3/A4/B4"
+     git add starter_v0/app.py starter_v0/frontend starter_v0/artifacts/REPORT.md TEAM_GUIDE.md README.md
+     git add -f starter_v0/transcripts/<four-reviewed-transcripts>.transcript.json
+     git commit -m "docs(ui): record live evidence and complete UI report sections"
      git push -u origin contrib/yohan-vinai
      ```
 
@@ -364,7 +376,7 @@ flowchart TD
     G1["GIAI ĐOẠN 1 (15% thời gian)<br>Setup Môi trường, Git Fork & Smoke Test"] --> G2["GIAI ĐOẠN 2 (20% thời gian)<br>Chạy Baseline v0 & Phân tích Failure"]
     G2 --> G3["GIAI ĐOẠN 3 (30% thời gian)<br>3 Vòng Cải tiến: v1 -> v2 -> v3"]
     G3 --> G4["GIAI ĐOẠN 4 (15% thời gian)<br>Team Eval (10 cases) & Adversarial Review"]
-    G4 --> G5["GIAI ĐOẠN 5 (10% thời gian)<br>Xây dựng Streamlit UI & Live Transcripts"]
+    G4 --> G5["GIAI ĐOẠN 5 (10% thời gian)<br>Xây dựng React/FastAPI UI & Live Transcripts"]
     G5 --> G6["GIAI ĐOẠN 6 (10% thời gian)<br>Hoàn tất REPORT.md, Self-Reflections & Nộp bài"]
 ```
 
@@ -376,7 +388,7 @@ flowchart TD
   * *Vòng 2 (v2)*: Xử lý `clarify` khi thiếu ID và hội thoại multi-turn (Vũ & Tuân). Quân chạy eval kiểm chứng. Ghi log v2.
   * *Vòng 3 (v3)*: Siết chặt ranh giới xác nhận ticket và bảo vệ dữ liệu ngoài (Vũ, Tuân, Điệp). Quân chạy toàn bộ base suite. Ghi log v3.
 - **Mốc 4 (Đánh giá nhóm & Bảo mật)**: Quân hoàn thiện 10 cases trong `eval_group.json`. Điệp chạy `eval_adversarial.json`, rà soát filesystem `tickets/` và phân tích thủ công 3 security cases.
-- **Mốc 5 (UI & Live Demo)**: Hãn hoàn thành Streamlit `app.py`, thu thập 4 transcript JSON cho 4 kịch bản bắt buộc.
+- **Mốc 5 (UI & Live Demo)**: Hãn hoàn thành React UI và FastAPI backend, thu thập 4 transcript JSON cho 4 kịch bản bắt buộc.
 - **Mốc 6 (Tổng kết & Nộp bài)**: Mở PR, Vũ review merge commit của cả 5 bạn vào `main` (không squash), hoàn tất các phần trong `REPORT.md`, kiểm tra vệ sinh repo và nộp link trên VLearn.
 
 ---

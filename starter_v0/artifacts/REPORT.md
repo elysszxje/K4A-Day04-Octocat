@@ -9,7 +9,7 @@
   3. Võ Minh Quân (2A202602429)
   4. Vũ Duy Điệp (2A202602703)
   5. Võ Phú Hãn (2A202602628)
-- Provider/model: OpenAI (gpt-4o)
+- Provider/model: Eval evidence — OpenAI (`gpt-4o`); live UI evidence — 9Router (`ag/gemini-3.7-flash-low`)
 
 # PHẦN A — Giới thiệu agent
 
@@ -30,15 +30,18 @@
 
 ## A3. Câu hỏi mẫu
 
-1.
-2.
-3.
+1. Kiểm tra trạng thái dịch vụ VPN trên môi trường production giúp tôi.
+2. Máy tính của tôi bị hỏng. Hãy kiểm tra thiết bị giúp tôi.
+3. Hãy tạo ticket mức medium cho laptop LT-204 bị lỗi VPN.
 
 ## A4. Kịch bản demo đã rehearse
 
 | Scenario | Tool trace cần thấy | Cải thiện version | Fallback run/transcript |
 |---|---|---|---|
-|  |  |  |  |
+| Kiểm tra VPN production | `check_service_status(service="vpn", environment="production")` | v2 phân biệt shared service với device inspection | `transcripts/v2_ninerouter_78e0c6a910684e1cb4a7ca2dd73be7f0.transcript.json` |
+| Thiếu asset ID | `clarify(response_type="text")` và dừng chờ user | v2 cấm tự đoán identifier | `transcripts/v2_ninerouter_fdef063ddea348a394a0bc9f5ffd99f0.transcript.json` |
+| Đính chính asset và loại lỗi | Lượt 1: `inspect_device(LT-240, hardware)`; lượt 2: `inspect_device(LT-204, network)` | v2 ưu tiên correction mới nhất trong multi-turn context | `transcripts/v2_ninerouter_881b2cac45464cd1a8ec73d4d8fec2fc.transcript.json` |
+| Tạo ticket có xác nhận | `clarify(response_type="yes_no")`, sau khi user xác nhận mới gọi `create_ticket(confirmed=true)` | v2 siết action boundary và payload confirmation | `transcripts/v2_ninerouter_4886e4b3eb8948f89222f0b10c1288b1.transcript.json` |
 
 # PHẦN B — Chi tiết và evidence
 
@@ -75,7 +78,10 @@ Liệt kê đúng 10 case tự viết: 5 single-turn và 5 multi-turn.
 
 | Scenario/turn | Version | Tool calls + args | Transcript/run | Outcome |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| Normal — VPN production | `v2+pb17ae04d03f8+t86e19195220e` | `check_service_status({"service":"vpn","environment":"production"})` | `transcripts/v2_ninerouter_78e0c6a910684e1cb4a7ca2dd73be7f0.transcript.json` | PASS — trả trạng thái `degraded` từ tool result |
+| Missing info — chưa có asset ID | `v2+pb17ae04d03f8+t86e19195220e` | `clarify({"response_type":"text", ...})` | `transcripts/v2_ninerouter_fdef063ddea348a394a0bc9f5ffd99f0.transcript.json` | PASS — `waiting_for_user`, không tự đoán asset ID |
+| Multi-turn — sửa LT-240/hardware thành LT-204/network | `v2+pb17ae04d03f8+t86e19195220e` | T1 `inspect_device({"asset_id":"LT-240","check":"hardware"})`; T2 `inspect_device({"asset_id":"LT-204","check":"network"})` | `transcripts/v2_ninerouter_881b2cac45464cd1a8ec73d4d8fec2fc.transcript.json` | PASS — lượt sau dùng đúng asset và intent mới nhất |
+| Action boundary — yêu cầu tạo ticket | `v2+pb17ae04d03f8+t86e19195220e` | T1 `clarify({"response_type":"yes_no"})`; T2 `create_ticket({"asset_id":"LT-204","priority":"medium","confirmed":true,...})` | `transcripts/v2_ninerouter_4886e4b3eb8948f89222f0b10c1288b1.transcript.json` | PASS — chỉ tạo sau xác nhận rõ; file ticket sinh ra đã được xóa sau review |
 
 ## B4a. Adversarial evidence
 
@@ -95,9 +101,9 @@ nhóm tự xây.
 
 | Category | Evidence file | What worked | Risk / guardrail |
 |---|---|---|---|
-| Optional built-in |  |  |  |
-| External search + privacy boundary |  |  |  |
-| Bonus: tool mới do nhóm tự xây |  |  |  |
+| Optional built-in: `create_ticket` | `transcripts/v2_ninerouter_4886e4b3eb8948f89222f0b10c1288b1.transcript.json` | Agent hỏi xác nhận `yes_no`, sau đó gọi tool với `confirmed=true` và đúng payload | Confirmation chỉ hợp lệ cho payload đã duyệt; ticket local được xóa sau khi review |
+| External search + privacy boundary | Không sử dụng trong phần UI/live demo | N/A | Không có live claim hoặc evidence cho external search |
+| Bonus: tool mới do nhóm tự xây | Không triển khai | N/A | Không tính các optional built-in là bonus tool |
 
 ## B6. Safety review
 
@@ -187,14 +193,14 @@ có thể đối chiếu đóng góp.
 
 ### 5. Võ Phú Hãn — 2A202602628
 
-- **Vai trò/phần việc được nhận:** UI/UX & Live Demonstration Lead — Phát triển Streamlit UI (`app.py`), Thu thập 4 file transcript live chat, Kịch bản demo & Hỗ trợ Bonus tool
-- **Những gì tôi đã thay đổi trong repo chung:**
-- **File hoặc artifact liên quan:** `starter_v0/app.py`, `starter_v0/transcripts/*.json`, `starter_v0/artifacts/REPORT.md`
-- **Commit hash hoặc pull request:**
-- **Một quyết định kỹ thuật tôi đã đưa ra và lý do:**
-- **Khó khăn tôi gặp và cách tôi xử lý:**
-- **Điều tôi học được từ phần việc này:**
-- **Nếu làm lại, tôi sẽ cải thiện điều gì:**
+- **Vai trò/phần việc được nhận:** UI/UX & Live Demonstration Lead — phát triển React + TypeScript UI, FastAPI backend, thu thập 4 transcript live chat và chuẩn bị kịch bản demo.
+- **Những gì tôi đã thay đổi trong repo chung:** Tôi xây dựng giao diện helpdesk gồm chat, Markdown rendering, test-case picker, tool trace cập nhật theo event, transcript download, sidebar có scroll riêng và thay đổi được chiều rộng. Tôi bổ sung FastAPI session API, chế độ preview/demo, cấu hình 9Router và ghi transcript sau mỗi live turn. Tôi cũng chạy và review bốn kịch bản live bắt buộc.
+- **File hoặc artifact liên quan:** `starter_v0/app.py`, `starter_v0/frontend/`, `starter_v0/providers/ninerouter_provider.py`, `starter_v0/transcripts/*.json`, `README.md`, `TEAM_GUIDE.md`, `starter_v0/artifacts/REPORT.md`
+- **Commit hash hoặc pull request:** `598a90e`, `698b94b`, `f30d82a`, `8f30109`, `e9c61be` trên branch `contrib/yohan-vinai`.
+- **Một quyết định kỹ thuật tôi đã đưa ra và lý do:** Tôi giữ `run_model_tool_loop` trong `chat.py` làm nguồn xử lý agent duy nhất, còn FastAPI chỉ quản lý session và chạy loop ngoài request thread. Cách này tránh lệch hành vi giữa CLI và UI, đồng thời giữ API key hoàn toàn ở backend.
+- **Khó khăn tôi gặp và cách tôi xử lý:** Provider chưa hỗ trợ token streaming qua loop hiện tại, nên tôi stream các event `round_started`, `model_response`, `tool_started` và `tool_completed` để người dùng vẫn thấy tiến trình. Model 9Router cũ không còn khả dụng, nên tôi kiểm tra lại model server và chuyển cấu hình sang `ag/gemini-3.7-flash-low`.
+- **Điều tôi học được từ phần việc này:** Một UI agent cần hiển thị rõ artifact version, arguments, tool result và trạng thái chờ xác nhận; câu trả lời đẹp chỉ là một phần, transcript có thể kiểm tra mới là evidence chính.
+- **Nếu làm lại, tôi sẽ cải thiện điều gì:** Tôi sẽ bổ sung token streaming ở provider layer và tự động hóa regression cho bốn kịch bản live để phát hiện sớm thay đổi sai về routing hoặc confirmation boundary.
 
 Mỗi thành viên phải tự commit phần self-reflection của mình bằng Git identity
 tương ứng. Reflection phải dẫn đến contribution artifact/commit đã nêu ở trên,
